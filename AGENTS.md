@@ -19,3 +19,4 @@
 - Use text-only Fellogram branding in shared app chrome and loading states; this keeps merchant logos distinct from the platform identity.
 - Accept a Telegram identity only after server-side initData signature verification; anything unverifiable signs into the shared demo account so the app never blocks and real users can't be impersonated.
 - Record every schema change both as a file under `supabase/migrations` and in the structure dump at `/mnt/documents/fellogram_database_setup.sql`, and keep both current with the live database; this lets a newly connected backend be rebuilt without guessing at the schema.
+- Keep the root error boundary free of hooks and let it reload the page at most once before showing a readable fallback; this recovers from a stale module graph instead of leaving a blank screen.
