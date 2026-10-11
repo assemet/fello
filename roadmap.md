@@ -32,3 +32,10 @@
 - [x] Reorganize merchant theme controls and live preview.
 - [x] Strengthen multi-store card headers, placeholders, and spacing.
 - [x] Verify mobile and desktop light/dark layouts.
+
+# Backend re-enable and schema restore
+- [x] Enable Lovable Cloud for the current environment.
+- [x] Restore tables, functions, triggers, RLS policies, and private logo storage from the structure dump.
+- [x] Enable email sign-in so the Telegram and demo sign-in flow can create sessions.
+- [x] Verify store creation, customer join, and the wallet card on the new backend.
+- [ ] Recreate the demo stores and sample stamps — waiting on the owner to confirm whether demo data should be rebuilt.
