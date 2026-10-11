@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LayoutDashboard, MoreHorizontal, ScanLine, Sparkles } from "lucide-react";
+import { LayoutDashboard, MoreHorizontal, ScanLine, Sparkles, Store } from "lucide-react";
 import { z } from "zod";
 import { brandThemeStyle } from "@/lib/card-theme";
 
@@ -118,7 +118,17 @@ function Wallet() {
             ))}
           </ul>
         )}
-
+{!focusedCard && !data.ownedStoreId && !data.staffStoreId && (
+  <div className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+    <div className="flex items-center gap-3">
+      <Store className="h-5 w-5 shrink-0 text-muted-foreground" />
+      <p className="text-sm font-semibold">{t("wallet.merchantCta.title")}</p>
+    </div>
+    <Button asChild variant="outline" size="sm" className="touch-action shrink-0">
+      <Link to="/merchant/new">{t("wallet.merchantCta.action")}</Link>
+    </Button>
+  </div>
+)}
       </section>
     </main>
   );
