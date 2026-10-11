@@ -3,7 +3,6 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -37,12 +36,32 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
+// A stale module graph (dev-server dependency re-optimisation, a half-loaded
+// chunk after a restart) can leave two React copies loaded. Hooks then throw
+// inside this boundary too, so the fallback never renders and the screen goes
+// blank. Reloading is the only recovery that does not itself need working
+// hooks, so do it once and no more.
+const RELOAD_FLAG = "fellogram-error-reload";
+
+function reloadOnce(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.sessionStorage.getItem(RELOAD_FLAG)) return false;
+    window.sessionStorage.setItem(RELOAD_FLAG, "1");
+  } catch {
+    return false;
+  }
+  window.location.reload();
+  return true;
+}
+
+// Hook-free on purpose: when the crash is a broken module graph, any hook here
+// throws again and the visitor is left staring at a blank page.
+function ErrorComponent({ error }: { error: unknown }) {
+  if (reloadOnce()) return null;
+
   console.error(error);
-  const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+  reportLovableError(error, { boundary: "tanstack_root_error_component" });
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -51,17 +70,10 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Something went wrong on our end. A refresh usually fixes it.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <Button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-          >
-            Try again
-          </Button>
+          <Button onClick={() => window.location.reload()}>Reload page</Button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
@@ -133,6 +145,19 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    // The app came up and stayed up, so a later crash earns one more reload.
+    // The delay keeps a crash-on-boot from looping reload forever.
+    const timer = setTimeout(() => {
+      try {
+        window.sessionStorage.removeItem(RELOAD_FLAG);
+      } catch {
+        /* storage unavailable: the guard simply stays armed */
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
